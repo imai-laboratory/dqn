@@ -140,15 +140,12 @@ class DQN(agent.AttributeSavingMixin, agent.Agent):
             model.to_cpu()
 
     def act(self, state):
-        if self.t % self.update_interval == 0:
-            with chainer.using_config('train', False):
-                with chainer.no_backprop_mode():
-                    action_value = self.model(
-                        self.batch_states([state], self.xp, self.phi))
-                    q = float(action_value.max.data)
-                    action = cuda.to_cpu(action_value.greedy_actions.data)[0]
-        else:
-            action = self.last_action
+        with chainer.using_config('train', False):
+            with chainer.no_backprop_mode():
+                action_value = self.model(
+                    self.batch_states([state], self.xp, self.phi))
+                q = float(action_value.max.data)
+                action = cuda.to_cpu(action_value.greedy_actions.data)[0]
 
         self.average_q *= self.average_q_decay
         self.average_q += (1 - self.average_q_decay) * q
@@ -157,20 +154,17 @@ class DQN(agent.AttributeSavingMixin, agent.Agent):
         return action
 
     def act_and_train(self, state, reward):
-        if self.t % self.update_interval == 0:
-            with chainer.using_config('train', False):
-                with chainer.no_backprop_mode():
-                    action_value = self.model(
-                        self.batch_states([state], self.xp, self.phi))
-                    q = float(action_value.max.data)
-                    greedy_action = cuda.to_cpu(action_value.greedy_actions.data)[0]
-                    self.average_q *= self.average_q_decay
-                    self.average_q += (1 - self.average_q_decay) * q
+        with chainer.using_config('train', False):
+            with chainer.no_backprop_mode():
+                action_value = self.model(
+                    self.batch_states([state], self.xp, self.phi))
+                q = float(action_value.max.data)
+                greedy_action = cuda.to_cpu(action_value.greedy_actions.data)[0]
+                self.average_q *= self.average_q_decay
+                self.average_q += (1 - self.average_q_decay) * q
 
-            action = self.explorer.select_action(
-                self.t, lambda: greedy_action, action_value=action_value)
-        else:
-            action = self.last_action
+        action = self.explorer.select_action(
+            self.t, lambda: greedy_action, action_value=action_value)
 
         if self.t % self.target_update_interval == 0:
             self.sync_target_network()

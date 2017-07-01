@@ -20,3 +20,7 @@ $ python train.py --gpu {0 or -1} --render --final-steps 10000000
 ```
 $ python play.py --gpu {0 or -1} --render --load {path of models}
 ```
+
+### TODO
+- Deep Learning framework will be changed from Chainer to Sony's NNabla.
+- Chainerrl will be removed because of its unflexiblity,

@@ -21,6 +21,9 @@ $ python train.py --gpu {0 or -1} --render --final-steps 10000000
 $ python play.py --gpu {0 or -1} --render --load {path of models}
 ```
 
+### cautions
+- Use `***Deterministic-v4` instead of `***-v0` for environemts because in default, environments sample {2, 3, 4} frames uniformaly. This affects negatively performance because of non-deterministic frame skipping.
+
 ### TODO
 - Deep Learning framework will be changed from Chainer to Sony's NNabla.
 - Chainerrl will be removed because of its unflexiblity,

@@ -23,15 +23,15 @@ def build_act(observations_ph, q_func, num_actions, scope='deepq', resue=None):
                             givens={update_eps_ph: -1.0, stochastic_ph: True},
                             updates=[update_eps_expr])
 
-def build_train(observations_ph, q_func, num_actions, optimizer,
+def build_train(observations_ph, q_func, num_actions, optimizer, batch_size=32,
                 grad_norm_clipping=10.0, gamma=1.0, scope='deepq', reuse=None):
     act_f = build_act(observations_ph, q_func, num_actions, scope=scope, reuse=reuse)
 
     with tf.variable_scope(scope, reuse=reuse):
-        obs_t_input = tf.placeholder(tf.float32, [32, 4, 84, 84], name='obs_t')
+        obs_t_input = tf.placeholder(tf.float32, [batch_size, 4, 84, 84], name='obs_t')
         act_t_ph = tf.placeholder(tf.int32, [None], name='action')
         rew_t_ph = tf.placeholder(tf.float32, [None], name='reward')
-        obs_tp1_input = tf.placeholder(tf.float32, [32, 4, 84, 84], name='obs_tp1')
+        obs_tp1_input = tf.placeholder(tf.float32, [batch_size, 4, 84, 84], name='obs_tp1')
         done_mask_ph = tf.placeholder(tf.float32, [None], name='done')
 
         q_t = q_func(obs_t_input.get(), num_actions, scope='q_func', reuse=True)

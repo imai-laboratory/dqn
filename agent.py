@@ -19,7 +19,7 @@ class Agent(object):
         act, train, update_target, q_values = build_graph.build_train(
             q_func=q_func,
             num_actions=num_actions,
-            optimizer=tf.train.RMSPropOptmizer(learning_rate=lr, decay=0.95, epsilon=1e-2),
+            optimizer=tf.train.RMSPropOptimizer(learning_rate=lr, decay=0.95, epsilon=1e-2),
             gamma=gamma,
             grad_norm_clipping=10.0
         )
@@ -29,18 +29,22 @@ class Agent(object):
         self._q_values = q_values
 
     def act(self, obs):
-        action = self._act(np.array(obs)[None], update_eps=update_eps, **kwargs)[0]
+        action = self._act(np.array(
+                obs, dtype=np.float32)[None] / 255.0, update_eps=update_eps, **kwargs)[0]
         return action
 
     def act_and_train(self, obs, reward):
         update_eps = exploration.value(t)
-        action = self._act(np.array(obs)[None], update_eps=update_eps, **kwargs)[0]
+        action = self._act(
+                np.array(obs, dtype=np.float32)[None] / 255.0, update_eps=update_eps, **kwargs)[0]
 
         if self.t % self.target_network_update_freq == 0:
             self._update_target()
 
-        if self.t > self.learning_starts && self.t % self.train_freq == 0:
+        if self.t > self.learning_starts and self.t % self.train_freq == 0:
             obs_t, actions, rewards, obs_tp1, dones = replay_buffer.sample(batch_size)
+            obs_t = np.array(obs_t, dtype=np.float32) / 255.0
+            obs_tp1 = np.array(obs_t, dtype=np.float32) / 255.0
             td_errors = self._train(obs_t, actions, rewards, obs_tp1, dones)
 
         if self.last_obs is not None:

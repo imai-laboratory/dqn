@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
 
-def make_cnn(convs, hiddens, inpt, num_actions, scope, resue=False):
+def _make_cnn(convs, hiddens, inpt, num_actions, scope, reuse=False):
     with tf.variable_scope(scope, reuse=reuse):
         out = inpt
         with tf.variable_scope('convnet'):
@@ -18,3 +18,6 @@ def make_cnn(convs, hiddens, inpt, num_actions, scope, resue=False):
                 action_out = layers.fully_connected(action_out, num_outputs=hidden, activation_fn=None)
             action_scores = layers.fully_connected(action_out, num_outputs=num_actions, activation_fn=None)
         return action_scores
+
+def make_cnn(convs, hiddens):
+    return lambda *args, **kwargs: _make_cnn(convs, hiddens, *args, **kwargs)

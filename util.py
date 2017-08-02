@@ -1,4 +1,5 @@
 import tensorflow as tf
+import collections
 
 def scope_vars(scope, trainable_only=False):
     return tf.get_collection(
@@ -32,14 +33,14 @@ def function(inputs, outputs, updates=None, givens=None):
         f = _Function(inputs, [outputs], updates, givens=givens)
         return lambda *args, **kwargs: f(*args, **kwargs)[0]
 
-def _Function(object):
-    def __init__(self, inputs, outputs, updates, givens)
+class _Function(object):
+    def __init__(self, inputs, outputs, updates, givens):
         self.inputs = inputs
         self.outputs = outputs
         self.givens = {} if givens is None else givens
         updates = updates or []
         self.update_group = tf.group(*updates)
-        self.outputs_update = list(putputs) + [self.update_group]
+        self.outputs_update = list(outputs) + [self.update_group]
 
     def __call__(self, *args, **kwargs):
         feed_dict = {}
@@ -49,7 +50,7 @@ def _Function(object):
         for inpt in self.inputs[len(args):]:
             inpt_name = inpt.name.split(':')[0]
             inpt_name = inpt_name.split('/')[-1]
-            if inpt_name in kargs:
+            if inpt_name in kwargs:
                 kwargs_passed_inpt_names.add(inpt_name)
                 feed_dict[inpt] = kwargs.pop(inpt_name)
         for inpt in self.givens:

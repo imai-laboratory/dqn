@@ -14,10 +14,6 @@ from explorer import LinearDecayExplorer
 from replay_buffer import ReplayBuffer
 
 
-
-def phi(states):
-    return np.asarray(states, dtype=np.float32) / 255.0
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='PongDeterministic-v4')
@@ -56,6 +52,11 @@ def main():
 
     initialize()
 
+    reward_summary = tf.placeholder(tf.int32, (), name='reward_summary')
+    tf.summary.scalar('reward_summary', r)
+    merged = tf.summary.merge_all()
+    train_writer = tf.summary.FileWriter('/tmp/dqn/train')
+
     global_step = 0
     episode = 0
 
@@ -78,6 +79,8 @@ def main():
             states[0] = state
 
             if done:
+                summary, _ = sess.run([merged, r], feed_dict={reward_summary: sum_of_rewards})
+                train_writer.add_summary(summary, global_step)
                 agent.stop_episode_and_train(states, clipped_reward, done=done)
                 break
 

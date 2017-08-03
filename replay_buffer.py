@@ -22,6 +22,6 @@ class ReplayBuffer:
             obs_t.append(experience['obs_t'])
             actions.append(experience['action'])
             rewards.append(experience['reward'])
-            obs_tp1.append(experinece['obs_tp1'])
+            obs_tp1.append(experience['obs_tp1'])
             done.append(experience['done'])
-        return obs_t1, actions, rewards, obs_tp1, done
+        return obs_t, actions, rewards, obs_tp1, done

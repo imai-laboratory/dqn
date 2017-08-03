@@ -15,6 +15,8 @@ class Agent(object):
         self.target_network_update_freq = target_network_update_freq
         self.last_obs = None
         self.t = 0
+        self.exploration = exploration
+        self.replay_buffer = replay_buffer
 
         act, train, update_target, q_values = build_graph.build_train(
             q_func=q_func,
@@ -29,20 +31,22 @@ class Agent(object):
         self._q_values = q_values
 
     def act(self, obs):
-        action = self._act(np.array(
-                obs, dtype=np.float32)[None] / 255.0, update_eps=update_eps, **kwargs)[0]
+        normalized_obs = np.zeros((32, 4, 84, 84), dtype=np.float32)
+        normalized_obs[0] = np.array(obs, dtype=np.float32) / 255.0
+        action = self._act(normalized_obs)[0]
         return action
 
     def act_and_train(self, obs, reward):
-        update_eps = exploration.value(t)
-        action = self._act(
-                np.array(obs, dtype=np.float32)[None] / 255.0, update_eps=update_eps, **kwargs)[0]
+        update_eps = self.exploration.value(self.t)
+        normalized_obs = np.zeros((32, 4, 84, 84), dtype=np.float32)
+        normalized_obs[0] = np.array(obs, dtype=np.float32) / 255.0
+        action = self._act(normalized_obs, update_eps=update_eps)[0]
 
         if self.t % self.target_network_update_freq == 0:
             self._update_target()
 
         if self.t > self.learning_starts and self.t % self.train_freq == 0:
-            obs_t, actions, rewards, obs_tp1, dones = replay_buffer.sample(batch_size)
+            obs_t, actions, rewards, obs_tp1, dones = self.replay_buffer.sample(self.batch_size)
             obs_t = np.array(obs_t, dtype=np.float32) / 255.0
             obs_tp1 = np.array(obs_t, dtype=np.float32) / 255.0
             td_errors = self._train(obs_t, actions, rewards, obs_tp1, dones)
@@ -57,7 +61,8 @@ class Agent(object):
         return action
 
     def stop_episode_and_train(self, obs, reward, done=False):
-        self.replay_buffer.append(obs_t=self.last_obs, reward=reward, obs_tp1=obs, done=done)
+        self.replay_buffer.append(obs_t=self.last_obs,
+                action=self.last_action, reward=reward, obs_tp1=obs, done=done)
         self.stop_episode()
 
     def stop_episode(self):

@@ -22,6 +22,7 @@ def build_act(observations_ph, q_func, num_actions, scope='deepq', reuse=None):
                             outputs=output_actions,
                             givens={update_eps_ph: -1.0, stochastic_ph: True},
                             updates=[update_eps_expr])
+        return act
 
 def build_train(q_func, num_actions, optimizer, batch_size=32,
                 grad_norm_clipping=10.0, gamma=1.0, scope='deepq', reuse=None):
@@ -37,14 +38,14 @@ def build_train(q_func, num_actions, optimizer, batch_size=32,
         q_t = q_func(obs_t_input, num_actions, scope='q_func', reuse=True)
         q_func_vars = util.scope_vars(util.absolute_scope_name('q_func'))
 
-        q_tp1 = q_func(obs_t_input, num_actions, scope='target_q_func', reuse=True)
+        q_tp1 = q_func(obs_t_input, num_actions, scope='target_q_func')
         target_q_func_vars = util.scope_vars(util.absolute_scope_name('target_q_func'))
 
         q_t_selected = tf.reduce_sum(q_t * tf.one_hot(act_t_ph, num_actions), 1)
         q_tp1_best = tf.reduce_max(q_tp1, 1)
         q_tp1_best_masked = (1.0 - done_mask_ph) * q_tp1_best
 
-        q_t_selected_target = rew_t + gamma * q_tp1_best_masked
+        q_t_selected_target = rew_t_ph + gamma * q_tp1_best_masked
         td_error = q_t_selected - tf.stop_gradient(q_t_selected_target)
         errors = util.huber_loss(td_error)
 
@@ -62,10 +63,10 @@ def build_train(q_func, num_actions, optimizer, batch_size=32,
 
         train = util.function(
             inputs=[
-                obs_t_input, act_t_ph, rew_t_ph, obs_t1_input, done_mask_ph
+                obs_t_input, act_t_ph, rew_t_ph, obs_tp1_input, done_mask_ph
             ],
             outputs=td_error,
-            update=[optimize_expr]
+            updates=[optimize_expr]
         )
         update_target = util.function([], [], updates=[update_target_expr])
 

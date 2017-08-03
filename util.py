@@ -1,6 +1,14 @@
 import tensorflow as tf
 import collections
 
+ALREADY_INITIALIZED = set()
+
+def initialize():
+    new_variables = set(tf.global_variables()) - ALREADY_INITIALIZED
+    get_session().run(tf.variables_initializer(new_variables))
+    ALREADY_INITIALIZED.update(new_variables)
+
+
 def scope_vars(scope, trainable_only=False):
     return tf.get_collection(
         tf.GraphKeys.TRAINABLE_VARIABLES if trainable_only else tf.GraphKeys.GLOBAL_VARIABLES,

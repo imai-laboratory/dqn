@@ -4,7 +4,9 @@ import gym
 import copy
 import os
 import numpy as np
+import tensorflow as tf
 
+from util import initialize
 from actions import get_action_space
 from network import make_cnn
 from agent import Agent
@@ -47,7 +49,12 @@ def main():
     replay_buffer = ReplayBuffer(10 ** 5)
     explorer = LinearDecayExplorer(final_exploration_step=args.final_exploration_frames)
 
-    agent = Agent(model, n_actions, replay_buffer, explorer, learning_starts=args.replay_start_size)
+    sess = tf.Session()
+    sess.__enter__()
+
+    agent = Agent(model, n_actions, replay_buffer, explorer, learning_starts=1000)
+
+    initialize()
 
     global_step = 0
     episode = 0
@@ -56,6 +63,7 @@ def main():
         states = np.zeros((args.update_interval, 84, 84), dtype=np.uint8)
         reward = 0
         done = False
+        clipped_reward = 0
         sum_of_rewards = 0
         step = 0
         state = env.reset()

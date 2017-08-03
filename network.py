@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
 
-def _make_cnn(convs, hiddens, inpt, num_actions, scope, reuse=False):
+def _make_cnn(convs, hiddens, inpt, num_actions, scope, reuse=None):
     with tf.variable_scope(scope, reuse=reuse):
         out = inpt
         with tf.variable_scope('convnet'):

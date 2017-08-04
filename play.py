@@ -5,32 +5,19 @@ import copy
 import os
 import numpy as np
 
-from dqn import DQN
+from util import initialize
 from actions import get_action_space
+from actions import get_action_space
+from network import make_cnn
+from agent import Agent
 
-from chainer import functions as F
-from chainer import links as L
-from chainer import optimizers
-
-from chainerrl.action_value import DiscreteActionValue
-from chainerrl import agents
-from chainerrl import explorers
-from chainerrl import experiments
-from chainerrl import links
-from chainerrl import misc
-from chainerrl import replay_buffer
-
-
-def phi(states):
-    return np.asarray(states, dtype=np.float32) / 255.0
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, default='Breakout-v0')
+    parser.add_argument('--env', type=str, default='PongDeterministic-v0')
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--load', type=str, default=None)
     parser.add_argument('--render', action='store_true')
-    parser.add_argument('--update-interval', type=int, default=4)
     args = parser.parse_args()
 
     env = gym.make(args.env)
@@ -38,34 +25,27 @@ def main():
     actions = get_action_space(args.env)
     n_actions = len(actions)
 
-    q_func = links.Sequence(
-            links.NatureDQNHead(n_input_channels=args.update_interval),
-            L.Linear(512, n_actions),
-            DiscreteActionValue)
+    model = make_cnn(
+        convs=[(32, 8, 4), (64, 4, 2), (64, 3, 1)],
+        hiddens=[512]
+    )
 
-    opt = optimizers.RMSpropGraves(
-        lr=2.5e-4, alpha=0.95, momentum=0.0, eps=1e-2)
-    opt.setup(q_func)
+    sess = tf.Session()
+    sess.__enter__()
 
-    rbuf = replay_buffer.ReplayBuffer(10 ** 5)
+    agent = Agent(model, n_actions, None, None)
 
-    explorer = explorers.ConstantEpsilonGreedy(0, None)
-
-    agent = DQN(q_func, opt, rbuf, gpu=args.gpu, gamma=0.99,
-                  update_interval=args.update_interval,
-                  explorer=explorer, phi=phi)
-
-    if args.load:
-        agent.load(args.load)
+    saver = tf.train.Saver()
+    if args.load is not None:
+        saver.restore(sess, args.load)
 
     global_step = 0
     episode = 0
 
     while True:
         states = np.zeros((args.update_interval, 84, 84), dtype=np.uint8)
-        reward = 0
-        done = False
         sum_of_rewards = 0
+        done = False
         step = 0
         state = env.reset()
 

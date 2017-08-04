@@ -18,6 +18,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='PongDeterministic-v4')
     parser.add_argument('--outdir', type=str, default=None)
+    parser.add_argument('--logdir', type=str, default=None)
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--load', type=str, default=None)
     parser.add_argument('--final-exploration-frames',
@@ -32,6 +33,8 @@ def main():
 
     if args.outdir is None:
         args.outdir = os.path.join(os.path.dirname(__file__), 'results')
+    if args.logdir is None:
+        args.logdir = os.path.join(os.path.dirname(__file__), 'logs')
 
     env = gym.make(args.env)
 
@@ -52,10 +55,14 @@ def main():
 
     initialize()
 
+    saver = tf.train.Saver()
+    if args.load is not None:
+        saver.restore(sess, args.load)
+
     reward_summary = tf.placeholder(tf.int32, (), name='reward_summary')
     tf.summary.scalar('reward_summary', r)
     merged = tf.summary.merge_all()
-    train_writer = tf.summary.FileWriter('/tmp/dqn/train')
+    train_writer = tf.summary.FileWriter(args.logdir)
 
     global_step = 0
     episode = 0
@@ -99,8 +106,8 @@ def main():
             global_step += 1
 
             if global_step % 10 ** 6 == 0:
-                path = os.path.join(args.outdir, '{}'.format(global_step))
-                agent.save(path)
+                path = os.path.join(args.outdir, '{}/model.ckpt'.format(global_step))
+                saver.save(sess, path)
 
         episode += 1
 

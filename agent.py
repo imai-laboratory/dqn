@@ -48,7 +48,7 @@ class Agent(object):
         if self.t > self.learning_starts and self.t % self.train_freq == 0:
             obs_t, actions, rewards, obs_tp1, dones = self.replay_buffer.sample(self.batch_size)
             obs_t = np.array(obs_t, dtype=np.float32) / 255.0
-            obs_tp1 = np.array(obs_t, dtype=np.float32) / 255.0
+            obs_tp1 = np.array(obs_tp1, dtype=np.float32) / 255.0
             td_errors = self._train(obs_t, actions, rewards, obs_tp1, dones)
 
         if self.last_obs is not None:

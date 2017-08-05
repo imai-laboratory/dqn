@@ -9,5 +9,5 @@ class LinearDecayExplorer:
     def value(self, t):
         if t > self.final_exploration_step:
             return self.final_epsilon
-        factor = 1 - t / self.final_exploration_step
+        factor = 1 - float(t) / self.final_exploration_step
         return self.base_epsilon * factor + self.final_epsilon

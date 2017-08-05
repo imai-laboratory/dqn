@@ -60,7 +60,7 @@ def main():
         saver.restore(sess, args.load)
 
     reward_summary = tf.placeholder(tf.int32, (), name='reward_summary')
-    tf.summary.scalar('reward_summary', r)
+    tf.summary.scalar('reward_summary', reward_summary)
     merged = tf.summary.merge_all()
     train_writer = tf.summary.FileWriter(args.logdir)
 
@@ -86,7 +86,7 @@ def main():
             states[0] = state
 
             if done:
-                summary, _ = sess.run([merged, r], feed_dict={reward_summary: sum_of_rewards})
+                summary, _ = sess.run([merged, reward_summary], feed_dict={reward_summary: sum_of_rewards})
                 train_writer.add_summary(summary, global_step)
                 agent.stop_episode_and_train(states, clipped_reward, done=done)
                 break

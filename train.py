@@ -33,6 +33,8 @@ def main():
 
     if args.outdir is None:
         args.outdir = os.path.join(os.path.dirname(__file__), 'results')
+        if not os.path.exists(args.outdir):
+            os.makedirs(path)
     if args.logdir is None:
         args.logdir = os.path.join(os.path.dirname(__file__), 'logs')
 

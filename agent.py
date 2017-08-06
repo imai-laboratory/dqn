@@ -10,6 +10,7 @@ class Agent(object):
             train_freq=4, learning_starts=10000, gamma=0.99, target_network_update_freq=10000):
         self.batch_size = batch_size
         self.train_freq = train_freq
+        self.num_actions = num_actions
         self.learning_starts = learning_starts
         self.gamma = gamma
         self.target_network_update_freq = target_network_update_freq
@@ -37,10 +38,10 @@ class Agent(object):
         return action
 
     def act_and_train(self, obs, reward):
-        update_eps = self.exploration.value(self.t)
         normalized_obs = np.zeros((32, 4, 84, 84), dtype=np.float32)
         normalized_obs[0] = np.array(obs, dtype=np.float32) / 255.0
-        action = self._act(normalized_obs, update_eps=update_eps)[0]
+        action = self._act(normalized_obs)[0]
+        action = self.exploration.select_action(self.t, action, self.num_actions)
 
         if self.t % self.target_network_update_freq == 0:
             self._update_target()

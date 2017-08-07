@@ -7,6 +7,8 @@ class ReplayBuffer:
         self.buffer = deque(maxlen=buffer_size)
 
     def append(self, obs_t, action, reward, obs_tp1, done):
+        if isinstance(done, bool):
+            done = 1 if done else 0
         experience = dict(obs_t=obs_t, action=action,
                 reward=reward, obs_tp1=obs_tp1, done=done)
         self.buffer.append(experience)

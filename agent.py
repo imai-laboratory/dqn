@@ -54,7 +54,7 @@ class Agent(object):
 
         if self.last_obs is not None:
             self.replay_buffer.append(obs_t=self.last_obs,
-                    action=action, reward=reward, obs_tp1=obs, done=False)
+                    action=self.last_action, reward=reward, obs_tp1=obs, done=False)
 
         self.t += 1
         self.last_obs = obs

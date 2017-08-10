@@ -8,6 +8,7 @@ DQN implementation for checking baselines.
 - tensorflow
 - gym[atari]
 - opencv-python
+- git+https://github.com/imai-laboratory/lightsaber
 
 ## usage
 ### training

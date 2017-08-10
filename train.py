@@ -6,12 +6,12 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from util import initialize
+from lightsaber.tensorflow.util import initialize
+from lightsaber.rl.explorer import LinearDecayExplorer
+from lightsaber.rl.replay_buffer import ReplayBuffer
 from actions import get_action_space
 from network import make_cnn
 from agent import Agent
-from explorer import LinearDecayExplorer
-from replay_buffer import ReplayBuffer
 
 
 def main():

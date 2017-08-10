@@ -5,7 +5,7 @@ import copy
 import os
 import numpy as np
 
-from util import initialize
+from lightsaber.tensorflow.util import initialize
 from actions import get_action_space
 from actions import get_action_space
 from network import make_cnn

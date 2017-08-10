@@ -1,6 +1,6 @@
 import network
 import build_graph
-import util
+import lightsaber.tensorflow.util as util
 import numpy as np
 import tensorflow as tf
 

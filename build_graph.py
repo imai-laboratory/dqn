@@ -1,5 +1,5 @@
 import tensorflow as tf
-import util
+import lightsaber.tensorflow.util as util
 
 def build_act(observations_ph, q_func, num_actions, scope='deepq', reuse=None):
     with tf.variable_scope(scope, reuse=reuse):

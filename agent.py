@@ -32,13 +32,13 @@ class Agent(object):
         self._q_values = q_values
 
     def act(self, obs):
-        normalized_obs = np.zeros((32, 4, 84, 84), dtype=np.float32)
+        normalized_obs = np.zeros((1, 4, 84, 84), dtype=np.float32)
         normalized_obs[0] = np.array(obs, dtype=np.float32) / 255.0
         action = self._act(normalized_obs)[0]
         return action
 
     def act_and_train(self, obs, reward):
-        normalized_obs = np.zeros((32, 4, 84, 84), dtype=np.float32)
+        normalized_obs = np.zeros((1, 4, 84, 84), dtype=np.float32)
         normalized_obs[0] = np.array(obs, dtype=np.float32) / 255.0
         action = self._act(normalized_obs)[0]
         action = self.exploration.select_action(self.t, action, self.num_actions)

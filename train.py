@@ -64,7 +64,7 @@ def main():
     reward_summary = tf.placeholder(tf.int32, (), name='reward_summary')
     tf.summary.scalar('reward_summary', reward_summary)
     merged = tf.summary.merge_all()
-    train_writer = tf.summary.FileWriter(args.logdir)
+    train_writer = tf.summary.FileWriter(args.logdir, sess.graph)
 
     global_step = 0
     episode = 0
@@ -90,19 +90,19 @@ def main():
             if done:
                 summary, _ = sess.run([merged, reward_summary], feed_dict={reward_summary: sum_of_rewards})
                 train_writer.add_summary(summary, global_step)
-                agent.stop_episode_and_train(states, clipped_reward, done=done)
+                agent.stop_episode_and_train(states.reshape(84, 84, 4), clipped_reward, done=done)
                 break
 
-            action = actions[agent.act_and_train(states, clipped_reward)]
+            action = actions[agent.act_and_train(states.reshape(84, 84, 4), clipped_reward)]
 
             state, reward, done, info = env.step(action)
 
             if reward > 0:
-                clipped_reward = 1
+                clipped_reward = 1.0
             elif reward < 0:
-                clipped_reward = -1
+                clipped_reward = -1.0
             else:
-                clipped_reward = 0
+                clipped_reward = 0.0
             sum_of_rewards += reward
             step += 1
             global_step += 1

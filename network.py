@@ -10,6 +10,7 @@ def _make_cnn(convs, hiddens, inpt, num_actions, scope, reuse=None):
                         num_outputs=num_outputs,
                         kernel_size=kernel_size,
                         stride=stride,
+                        padding='VALID',
                         activation_fn=tf.nn.relu)
         conv_out = layers.flatten(out)
         with tf.variable_scope('action_value'):

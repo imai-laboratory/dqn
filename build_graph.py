@@ -1,29 +1,20 @@
 import tensorflow as tf
 import lightsaber.tensorflow.util as util
 
-def build_act(observations_ph, q_func, num_actions, scope='deepq', reuse=None):
-    with tf.variable_scope(scope, reuse=reuse):
-        q_values = q_func(observations_ph, num_actions, scope='q_func')
-        actions = tf.argmax(q_values, axis=1)
-
-        act = util.function(inputs=[observations_ph], outputs=actions)
-        return act
 
 def build_train(q_func, num_actions, optimizer, batch_size=32,
                 grad_norm_clipping=10.0, gamma=1.0, scope='deepq', reuse=None):
-    obs_t_input = tf.placeholder(tf.float32, [None, 84, 84, 4], name='obs_t')
-    act_f = build_act(obs_t_input, q_func, num_actions, scope=scope, reuse=reuse)
-
     with tf.variable_scope(scope, reuse=reuse):
+        obs_t_input = tf.placeholder(tf.float32, [None, 84, 84, 4], name='obs_t')
         act_t_ph = tf.placeholder(tf.int32, [None], name='action')
         rew_t_ph = tf.placeholder(tf.float32, [None], name='reward')
         obs_tp1_input = tf.placeholder(tf.float32, [None, 84, 84, 4], name='obs_tp1')
         done_mask_ph = tf.placeholder(tf.float32, [None], name='done')
 
-        q_t = q_func(obs_t_input, num_actions, scope='q_func', reuse=True)
+        q_t = q_func(obs_t_input, num_actions, scope='q_func')
         q_func_vars = util.scope_vars(util.absolute_scope_name('q_func'))
 
-        q_tp1 = q_func(obs_t_input, num_actions, scope='target_q_func')
+        q_tp1 = q_func(obs_tp1_input, num_actions, scope='target_q_func')
         target_q_func_vars = util.scope_vars(util.absolute_scope_name('target_q_func'))
 
         q_t_selected = tf.reduce_sum(q_t * tf.one_hot(act_t_ph, num_actions), 1)
@@ -46,6 +37,9 @@ def build_train(q_func, num_actions, optimizer, batch_size=32,
             update_target_expr.append(var_target.assign(var))
         update_target_expr = tf.group(*update_target_expr)
 
+        actions = tf.argmax(q_t, axis=1)
+        act = util.function(inputs=[obs_t_input], outputs=actions)
+
         train = util.function(
             inputs=[
                 obs_t_input, act_t_ph, rew_t_ph, obs_tp1_input, done_mask_ph
@@ -57,4 +51,4 @@ def build_train(q_func, num_actions, optimizer, batch_size=32,
 
         q_values = util.function([obs_t_input], q_t)
 
-        return act_f, train, update_target, q_values
+        return act, train, update_target, q_values

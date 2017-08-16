@@ -22,7 +22,7 @@ class Agent(object):
         act, train, update_target, q_values = build_graph.build_train(
             q_func=q_func,
             num_actions=num_actions,
-            optimizer=tf.train.RMSPropOptimizer(learning_rate=lr, decay=0.95, momentum=0.0, epsilon=1e-2),
+            optimizer=tf.train.RMSPropOptimizer(learning_rate=lr, momentum=0.95, epsilon=1e-2),
             gamma=gamma,
             grad_norm_clipping=10.0
         )

@@ -90,10 +90,10 @@ def main():
             if done:
                 summary, _ = sess.run([merged, reward_summary], feed_dict={reward_summary: sum_of_rewards})
                 train_writer.add_summary(summary, global_step)
-                agent.stop_episode_and_train(states.reshape(84, 84, 4), clipped_reward, done=done)
+                agent.stop_episode_and_train(np.transpose(states, [1, 2, 0]), clipped_reward, done=done)
                 break
 
-            action = actions[agent.act_and_train(states.reshape(84, 84, 4), clipped_reward)]
+            action = actions[agent.act_and_train(np.transpose(states, [1, 2, 0]), clipped_reward)]
 
             state, reward, done, info = env.step(action)
 

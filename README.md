@@ -5,10 +5,10 @@ DQN implementation for checking baselines.
 - Python3
 
 ## dependencies
-- chainer==2.0.0
+- tensorflow
 - gym[atari]
-- chainerrl=0.2.0
 - opencv-python
+- git+https://github.com/imai-laboratory/lightsaber
 
 ## usage
 ### training
@@ -24,6 +24,8 @@ $ python play.py --gpu {0 or -1} --render --load {path of models}
 ### cautions
 - Use `***Deterministic-v4` instead of `***-v0` for environemts because in default, environments sample {2, 3, 4} frames uniformaly. This affects negatively performance because of non-deterministic frame skipping.
 
-### TODO
-- Deep Learning framework will be changed from Chainer to Sony's NNabla.
-- Chainerrl will be removed because of its unflexiblity,
+### implementation
+This baseline is inspired by following projects.
+
+- [OpenAI Baselines](https://github.com/openai/baselines)
+- [ChainerRL](https://github.com/chainer/chainerrl)

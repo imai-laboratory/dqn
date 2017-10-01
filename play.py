@@ -4,6 +4,7 @@ import gym
 import copy
 import os
 import numpy as np
+import tensorflow as tf
 
 from lightsaber.tensorflow.util import initialize
 from actions import get_action_space
@@ -18,6 +19,7 @@ def main():
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--load', type=str, default=None)
     parser.add_argument('--render', action='store_true')
+    parser.add_argument('--update-interval', type=int, default=4)
     args = parser.parse_args()
 
     env = gym.make(args.env)
@@ -58,7 +60,7 @@ def main():
             states = np.roll(states, 1, axis=0)
             states[0] = state
 
-            action = actions[agent.act(states)]
+            action = actions[agent.act(np.transpose(states, [1, 2, 0]))]
 
             if done:
                 break

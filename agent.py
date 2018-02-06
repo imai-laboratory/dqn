@@ -89,15 +89,15 @@ class Agent(AgentInterface):
         return action
 
     def stop_episode(self, obs, reward, done=False, training=True):
-        # transpose state shape to WHC
-        obs = np.transpose(obs, [1, 2, 0])
-        self.replay_buffer.append(
-            obs_t=self.last_obs,
-            action=self.last_action,
-            reward=reward,
-            obs_tp1=obs,
-            done=done
-        )
+        self.last_obs = None
+        self.last_action = 0
         if training:
-            self.last_obs = None
-            self.last_action = 0
+            # transpose state shape to WHC
+            obs = np.transpose(obs, [1, 2, 0])
+            self.replay_buffer.append(
+                obs_t=self.last_obs,
+                action=self.last_action,
+                reward=reward,
+                obs_tp1=obs,
+                done=done
+            )

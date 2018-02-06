@@ -7,36 +7,33 @@ import numpy as np
 import tensorflow as tf
 
 from lightsaber.tensorflow.util import initialize
+from lightsaber.tensorflow.log import TfBoardLogger
 from lightsaber.rl.explorer import LinearDecayExplorer
 from lightsaber.rl.replay_buffer import ReplayBuffer
+from lightsaber.rl.trainer import Trainer
 from actions import get_action_space
 from network import make_cnn
 from agent import Agent
+from datetime import datetime
 
 
 def main():
+    date = datetime.now().strftime("%Y%m%d%H%M%S")
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='PongDeterministic-v4')
-    parser.add_argument('--outdir', type=str, default=None)
-    parser.add_argument('--logdir', type=str, default=None)
-    parser.add_argument('--gpu', type=int, default=0)
+    parser.add_argument('--outdir', type=str, default=date)
+    parser.add_argument('--logdir', type=str, default=date)
     parser.add_argument('--load', type=str, default=None)
-    parser.add_argument('--final-exploration-frames',
-                        type=int, default=10 ** 6)
-    parser.add_argument('--final-steps', type=int, default=10 ** 7)
-    parser.add_argument('--replay-start-size', type=int, default=5 * 10 ** 4)
-    parser.add_argument('--target-update-interval',
-                        type=int, default=10 ** 4)
-    parser.add_argument('--update-interval', type=int, default=4)
+    parser.add_argument('--final-exploration-frames', type=int, default=10 ** 6)
+    parser.add_argument('--final-step', type=int, default=10 ** 7)
     parser.add_argument('--render', action='store_true')
+    parser.add_argument('--demo', action='store_true')
     args = parser.parse_args()
 
-    if args.outdir is None:
-        args.outdir = os.path.join(os.path.dirname(__file__), 'results')
-        if not os.path.exists(args.outdir):
-            os.makedirs(args.outdir)
-    if args.logdir is None:
-        args.logdir = os.path.join(os.path.dirname(__file__), 'logs')
+    outdir = os.path.join(os.path.dirname(__file__), args.outdir)
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    logdir = os.path.join(os.path.dirname(__file__), 'logs/' + args.logdir)
 
     env = gym.make(args.env)
 
@@ -48,12 +45,20 @@ def main():
         hiddens=[512]
     )
     replay_buffer = ReplayBuffer(10 ** 5)
-    explorer = LinearDecayExplorer(final_exploration_step=args.final_exploration_frames)
+    explorer = LinearDecayExplorer(
+        final_exploration_step=args.final_exploration_frames
+    )
 
     sess = tf.Session()
     sess.__enter__()
 
-    agent = Agent(model, n_actions, replay_buffer, explorer, learning_starts=10000)
+    agent = Agent(
+        model,
+        n_actions,
+        replay_buffer,
+        explorer,
+        learning_starts=10000
+    )
 
     initialize()
 
@@ -61,63 +66,34 @@ def main():
     if args.load is not None:
         saver.restore(sess, args.load)
 
-    reward_summary = tf.placeholder(tf.int32, (), name='reward_summary')
-    tf.summary.scalar('reward_summary', reward_summary)
-    merged = tf.summary.merge_all()
-    train_writer = tf.summary.FileWriter(args.logdir, sess.graph)
+    train_writer = tf.summary.FileWriter(logdir, sess.graph)
+    logger = TfBoardLogger(train_writer)
+    logger.register('reward', dtype=tf.int32)
+    end_episode = lambda r, t, e: logger.plot('reward', r, t)
 
-    global_step = 0
-    episode = 0
+    def preprocess(state):
+        state = cv2.cvtColor(state, cv2.COLOR_RGB2GRAY)
+        state = cv2.resize(state, (84, 84))
+        return state
 
-    while True:
-        states = np.zeros((args.update_interval, 84, 84), dtype=np.uint8)
-        reward = 0
-        done = False
-        clipped_reward = 0
-        sum_of_rewards = 0
-        step = 0
-        state = env.reset()
+    def after_action(state, reward, global_step, local_step):
+        if global_step % 10 ** 6 == 0:
+            path = os.path.join(outdir, '{}/model.ckpt'.format(global_step))
+            saver.save(sess, path)
 
-        while True:
-            if args.render:
-                env.render()
-
-            state = cv2.cvtColor(state, cv2.COLOR_RGB2GRAY)
-            state = cv2.resize(state, (84, 84))
-            states = np.roll(states, 1, axis=0)
-            states[0] = state
-
-            if done:
-                summary, _ = sess.run([merged, reward_summary], feed_dict={reward_summary: sum_of_rewards})
-                train_writer.add_summary(summary, global_step)
-                agent.stop_episode_and_train(np.transpose(states, [1, 2, 0]), clipped_reward, done=done)
-                break
-
-            action = actions[agent.act_and_train(np.transpose(states, [1, 2, 0]), clipped_reward)]
-
-            state, reward, done, info = env.step(action)
-
-            if reward > 0:
-                clipped_reward = 1.0
-            elif reward < 0:
-                clipped_reward = -1.0
-            else:
-                clipped_reward = 0.0
-            sum_of_rewards += reward
-            step += 1
-            global_step += 1
-
-            if global_step % 10 ** 6 == 0:
-                path = os.path.join(args.outdir, '{}/model.ckpt'.format(global_step))
-                saver.save(sess, path)
-
-        episode += 1
-
-        print('Episode: {}, Step: {}: Reward: {}'.format(
-                episode, global_step, sum_of_rewards))
-
-        if args.final_steps < global_step:
-            break
+    trainer = Trainer(
+        env=env,
+        agent=agent,
+        render=args.render,
+        state_shape=[84, 84],
+        state_window=4,
+        final_step=args.final_step,
+        preprocess=preprocess,
+        after_action=after_action,
+        end_episode=end_episode,
+        training=not args.demo
+    )
+    trainer.start()
 
 if __name__ == '__main__':
     main()

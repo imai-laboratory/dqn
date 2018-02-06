@@ -12,12 +12,12 @@ def preprocess(state):
     return state / 255.0
 
 class Agent(AgentInterface):
-    def __init__(self, q_func, num_actions, replay_buffer,
+    def __init__(self, q_func, actions, replay_buffer,
             exploration, lr=2.5e-4, batch_size=32, train_freq=4,
             learning_starts=1e4, gamma=0.99, target_network_update_freq=1e4):
         self.batch_size = batch_size
         self.train_freq = train_freq
-        self.num_actions = num_actions
+        self.actions = actions
         self.learning_starts = learning_starts
         self.gamma = gamma
         self.target_network_update_freq = target_network_update_freq
@@ -28,7 +28,7 @@ class Agent(AgentInterface):
 
         act, train, update_target, q_values = build_graph.build_train(
             q_func=q_func,
-            num_actions=num_actions,
+            num_actions=len(actions),
             optimizer=tf.train.RMSPropOptimizer(
                 learning_rate=lr,
                 momentum=0.95,
@@ -53,7 +53,7 @@ class Agent(AgentInterface):
         action = self.exploration.select_action(
             self.t, 
             action,
-            self.num_actions
+            len(self.actions)
         )
 
         if training:
@@ -86,7 +86,7 @@ class Agent(AgentInterface):
         self.t += 1
         self.last_obs = obs
         self.last_action = action
-        return action
+        return self.actions[action]
 
     def stop_episode(self, obs, reward, done=False, training=True):
         if training:

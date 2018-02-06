@@ -54,7 +54,7 @@ def main():
 
     agent = Agent(
         model,
-        n_actions,
+        actions,
         replay_buffer,
         explorer,
         learning_starts=10000

@@ -45,8 +45,6 @@ class Agent(AgentInterface):
     def act(self, obs, reward, training):
         # transpose state shape to WHC
         obs = np.transpose(obs, [1, 2, 0])
-        # clip reward
-        reward = np.clip(reward, -1, 1)
         # take the best action
         action = self._act(preprocess(obs).reshape([1, 84, 84, 4]))[0]
         # epsilon greedy exploration

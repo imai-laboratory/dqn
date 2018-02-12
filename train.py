@@ -11,6 +11,7 @@ from lightsaber.tensorflow.log import TfBoardLogger
 from lightsaber.rl.explorer import LinearDecayExplorer
 from lightsaber.rl.replay_buffer import ReplayBuffer
 from lightsaber.rl.trainer import Trainer
+from lightsaber.rl.env_wrapper import EnvWrapper
 from actions import get_action_space
 from network import make_cnn
 from agent import Agent
@@ -36,9 +37,13 @@ def main():
     logdir = os.path.join(os.path.dirname(__file__), 'logs/' + args.logdir)
 
     env = gym.make(args.env)
-
-    actions = get_action_space(args.env)
-    n_actions = len(actions)
+    def r_preprocess(reward):
+        return np.clip(reward, -1, 1)
+    def s_preprocess(state):
+        state = cv2.cvtColor(state, cv2.COLOR_RGB2GRAY)
+        state = cv2.resize(state, (84, 84))
+        return state
+    env = EnvWrapper(env, r_preprocess=r_preprocess, s_preprocess=s_preprocess)
 
     model = make_cnn(
         convs=[(32, 8, 4), (64, 4, 2), (64, 3, 1)],
@@ -54,7 +59,7 @@ def main():
 
     agent = Agent(
         model,
-        actions,
+        get_action_space(args.env),
         replay_buffer,
         explorer,
         learning_starts=10000
@@ -71,11 +76,6 @@ def main():
     logger.register('reward', dtype=tf.int32)
     end_episode = lambda r, t, e: logger.plot('reward', r, t)
 
-    def preprocess(state):
-        state = cv2.cvtColor(state, cv2.COLOR_RGB2GRAY)
-        state = cv2.resize(state, (84, 84))
-        return state
-
     def after_action(state, reward, global_step, local_step):
         if global_step % 10 ** 6 == 0:
             path = os.path.join(outdir, '{}/model.ckpt'.format(global_step))
@@ -88,7 +88,6 @@ def main():
         state_shape=[84, 84],
         state_window=4,
         final_step=args.final_step,
-        preprocess=preprocess,
         after_action=after_action,
         end_episode=end_episode,
         training=not args.demo

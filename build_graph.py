@@ -2,13 +2,21 @@ import tensorflow as tf
 import lightsaber.tensorflow.util as util
 
 
-def build_train(q_func, num_actions, optimizer, batch_size=32,
-                grad_norm_clipping=10.0, gamma=1.0, scope='deepq', reuse=None):
+def build_train(q_func,
+                num_actions,
+                state_shape,
+                optimizer,
+                constants,
+                batch_size=32,
+                grad_norm_clipping=10.0,
+                gamma=1.0,
+                scope='deepq',
+                reuse=None):
     with tf.variable_scope(scope, reuse=reuse):
-        obs_t_ph = tf.placeholder(tf.float32, [None, 84, 84, 4], name='obs_t')
+        obs_t_ph = tf.placeholder(tf.float32, [None] + state_shape, name='obs_t')
         act_t_ph = tf.placeholder(tf.int32, [None], name='action')
         rew_t_ph = tf.placeholder(tf.float32, [None], name='reward')
-        obs_tp1_ph = tf.placeholder(tf.float32, [None, 84, 84, 4], name='obs_tp1')
+        obs_tp1_ph = tf.placeholder(tf.float32, [None] + state_shape, name='obs_tp1')
         done_mask_ph = tf.placeholder(tf.float32, [None], name='done')
 
         # q network

@@ -6,47 +6,58 @@ import numpy as np
 import tensorflow as tf
 
 
-# another preprocess to store integer matrix into replay memory
-def preprocess(state):
-    state = np.array(state, dtype=np.float32)
-    return state / 255.0
-
 class Agent(AgentInterface):
-    def __init__(self, q_func, actions, replay_buffer,
-            exploration, lr=2.5e-4, batch_size=32, train_freq=4,
-            learning_starts=1e4, gamma=0.99, target_network_update_freq=1e4):
+    def __init__(self,
+                q_func,
+                actions,
+                state_shape,
+                replay_buffer,
+                exploration,
+                constants,
+                phi=lambda s: s,
+                batch_size=32,
+                train_freq=4,
+                learning_starts=1e4,
+                target_network_update_freq=1e4):
         self.batch_size = batch_size
         self.train_freq = train_freq
         self.actions = actions
         self.learning_starts = learning_starts
-        self.gamma = gamma
         self.target_network_update_freq = target_network_update_freq
-        self.last_obs = None
-        self.t = 0
         self.exploration = exploration
         self.replay_buffer = replay_buffer
+        self.phi = phi
 
-        act, train, update_target, q_values = build_graph.build_train(
+        if constants.OPTIMIZER == 'adam':
+            optimizer = tf.train.AdamOptimizer(constants.LR)
+        else:
+            optimizer = tf.train.RMSPropOptimizer(
+                learning_rate=constants.LR,
+                momentum=constants.MOMENTUM,
+                epsilon=constants.EPSILON
+            )
+
+        self._act,\
+        self._train,\
+        self._update_target,\
+        self._q_values = build_graph.build_train(
             q_func=q_func,
             num_actions=len(actions),
-            optimizer=tf.train.RMSPropOptimizer(
-                learning_rate=lr,
-                momentum=0.95,
-                epsilon=1e-2
-            ),
-            gamma=gamma,
-            grad_norm_clipping=10.0
+            state_shape=state_shape,
+            optimizer=optimizer,
+            constants=constants,
+            gamma=constants.GAMMA,
+            grad_norm_clipping=constants.GRAD_CLIPPING
         )
-        self._act = act
-        self._train = train
-        self._update_target = update_target
-        self._q_values = q_values
+
+        self.last_obs = None
+        self.t = 0
 
     def act(self, obs, reward, training):
         # transpose state shape to WHC
-        obs = np.transpose(obs, [1, 2, 0])
+        obs = self.phi(obs)
         # take the best action
-        action = self._act(preprocess(obs).reshape([1, 84, 84, 4]))[0]
+        action = self._act([obs])[0]
         # epsilon greedy exploration
         action = self.exploration.select_action(
             self.t, 
@@ -65,10 +76,10 @@ class Agent(AgentInterface):
                 obs_tp1,\
                 dones = self.replay_buffer.sample(self.batch_size)
                 td_errors = self._train(
-                    preprocess(obs_t),
+                    obs_t,
                     actions,
                     rewards,
-                    preprocess(obs_tp1),
+                    obs_tp1,
                     dones
                 )
 
@@ -89,7 +100,7 @@ class Agent(AgentInterface):
     def stop_episode(self, obs, reward, done=False, training=True):
         if training:
             # transpose state shape to WHC
-            obs = np.transpose(obs, [1, 2, 0])
+            obs = self.phi(obs)
             self.replay_buffer.append(
                 obs_t=self.last_obs,
                 action=self.last_action,

@@ -31,7 +31,7 @@ def main():
     parser.add_argument('--demo', action='store_true')
     args = parser.parse_args()
 
-    outdir = os.path.join(os.path.dirname(__file__), 'results_' + args.outdir)
+    outdir = os.path.join(os.path.dirname(__file__), 'results/' + args.outdir)
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     logdir = os.path.join(os.path.dirname(__file__), 'logs/' + args.logdir)

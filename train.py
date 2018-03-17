@@ -114,8 +114,8 @@ def main():
 
     def after_action(state, reward, global_step, local_step):
         if global_step % constants.MODEL_SAVE_INTERVAL == 0:
-            path = os.path.join(outdir, '{}/model.ckpt'.format(global_step))
-            saver.save(sess, path)
+            path = os.path.join(outdir, '/model.ckpt')
+            saver.save(sess, path, global_step=global_step)
 
     trainer = Trainer(
         env=env,

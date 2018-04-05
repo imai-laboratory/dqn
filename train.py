@@ -104,7 +104,7 @@ def main():
 
     train_writer = tf.summary.FileWriter(logdir, sess.graph)
     tflogger = TfBoardLogger(train_writer)
-    tflogger.register('reward', dtype=tf.int32)
+    tflogger.register('reward', dtype=tf.float32)
     jsonlogger = JsonLogger(os.path.join(outdir, 'reward.json'))
 
     # callback on the end of episode

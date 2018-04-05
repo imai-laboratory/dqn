@@ -113,7 +113,7 @@ def main():
         jsonlogger.plot(reward=reward, step=step, episode=episode)
 
     def after_action(state, reward, global_step, local_step):
-        if global_step % constants.MODEL_SAVE_INTERVAL == 0:
+        if global_step > 0 and global_step % constants.MODEL_SAVE_INTERVAL == 0:
             path = os.path.join(outdir, '/model.ckpt')
             saver.save(sess, path, global_step=global_step)
 

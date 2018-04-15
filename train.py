@@ -13,6 +13,7 @@ from lightsaber.tensorflow.log import TfBoardLogger, JsonLogger, dump_constants
 from lightsaber.rl.explorer import LinearDecayExplorer, ConstantExplorer
 from lightsaber.rl.replay_buffer import ReplayBuffer
 from lightsaber.rl.trainer import Trainer
+from lightsaber.rl.evaluator import Evaluator, Recorder
 from lightsaber.rl.env_wrapper import EnvWrapper
 from actions import get_action_space
 from network import make_cnn
@@ -29,6 +30,7 @@ def main():
     parser.add_argument('--load', type=str, default=None)
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--demo', action='store_true')
+    parser.add_argument('--record', action='store_true')
     args = parser.parse_args()
 
     outdir = os.path.join(os.path.dirname(__file__), 'results/' + args.outdir)
@@ -105,6 +107,7 @@ def main():
     train_writer = tf.summary.FileWriter(logdir, sess.graph)
     tflogger = TfBoardLogger(train_writer)
     tflogger.register('reward', dtype=tf.float32)
+    tflogger.register('eval_reward', dtype=tf.float32)
     jsonlogger = JsonLogger(os.path.join(outdir, 'reward.json'))
 
     # callback on the end of episode
@@ -114,8 +117,20 @@ def main():
 
     def after_action(state, reward, global_step, local_step):
         if global_step > 0 and global_step % constants.MODEL_SAVE_INTERVAL == 0:
-            path = os.path.join(outdir, '/model.ckpt')
+            path = os.path.join(outdir, 'model.ckpt')
             saver.save(sess, path, global_step=global_step)
+
+
+    evaluator = Evaluator(
+        env=copy.deepcopy(env),
+        state_shape=state_shape[:-1],
+        state_window=constants.STATE_WINDOW,
+        eval_episodes=constants.EVAL_EPISODES,
+        recorder=Recorder(outdir) if args.record else None,
+        record_episodes=constants.RECORD_EPISODES
+    )
+    should_eval = lambda step, episode: step > 0 and step % constants.EVAL_INTERVAL == 0
+    end_eval = lambda s, e, r: tflogger.plot('eval_reward', np.mean(r), s)
 
     trainer = Trainer(
         env=env,
@@ -126,7 +141,10 @@ def main():
         final_step=constants.FINAL_STEP,
         after_action=after_action,
         end_episode=end_episode,
-        training=not args.demo
+        training=not args.demo,
+        evaluator=evaluator,
+        should_eval=should_eval,
+        end_eval=end_eval
     )
     trainer.start()
 

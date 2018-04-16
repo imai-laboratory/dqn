@@ -58,12 +58,11 @@ class Agent(AgentInterface):
         obs = self.phi(obs)
         # take the best action
         action = self._act([obs])[0]
+
         # epsilon greedy exploration
-        action = self.exploration.select_action(
-            self.t, 
-            action,
-            len(self.actions)
-        )
+        if training:
+            action = self.exploration.select_action(
+                self.t, action, len(self.actions))
 
         if training:
             if self.t % self.target_network_update_freq == 0:

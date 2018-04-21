@@ -22,14 +22,12 @@ def build_train(q_func,
         # q network
         q_t = q_func(obs_t_ph, num_actions, scope='q_func')
         q_func_vars = util.scope_vars(
-            util.absolute_scope_name('q_func')
-        )
+            util.absolute_scope_name('q_func'))
 
         # target q network
         q_tp1 = q_func(obs_tp1_ph, num_actions, scope='target_q_func')
         target_q_func_vars = util.scope_vars(
-            util.absolute_scope_name('target_q_func')
-        )
+            util.absolute_scope_name('target_q_func'))
 
         q_t_selected = tf.reduce_sum(q_t * tf.one_hot(act_t_ph, num_actions), 1)
         q_tp1_best = tf.reduce_max(q_tp1, 1)
@@ -56,19 +54,36 @@ def build_train(q_func,
 
         # taking best action
         actions = tf.argmax(q_t, axis=1)
-        act = util.function(inputs=[obs_t_ph], outputs=actions)
+        def act(obs, sess=None):
+            if sess is None:
+                sess = tf.get_default_session()
+            return sess.run(actions, feed_dict={obs_t_ph: obs})
 
         # update network
-        train = util.function(
-            inputs=[
-                obs_t_ph, act_t_ph, rew_t_ph, obs_tp1_ph, done_mask_ph
-            ],
-            outputs=td_error,
-            updates=[optimize_expr]
-        )
-        update_target = util.function([], [], updates=[update_target_expr])
+        def train(obs_t, act_t, rew_t, obs_tp1, done, sess=None):
+            if sess is None:
+                sess = tf.get_default_session()
+            feed_dict = {
+                obs_t_ph: obs_t,
+                act_t_ph: act_t,
+                rew_t_ph: rew_t,
+                obs_tp1_ph: obs_tp1,
+                done_mask_ph: done
+            }
+            td_error_val, _ = sess.run(
+                [td_error, optimize_expr], feed_dict=feed_dict)
+            return td_error_val
+
+        # synchronize target network
+        def update_target(sess=None):
+            if sess is None:
+                sess = tf.get_default_session()
+            sess.run(update_target_expr)
 
         # estimate q value
-        q_values = util.function([obs_t_ph], q_t)
+        def q_values(obs, sess=None):
+            if sess is None:
+                sess = tf.get_default_session()
+            return sess.run(q_t, feed_dict={obs_t_ph: obs})
 
         return act, train, update_target, q_values

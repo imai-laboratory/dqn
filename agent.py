@@ -96,7 +96,7 @@ class Agent(AgentInterface):
         self.last_action = action
         return self.actions[action]
 
-    def stop_episode(self, obs, reward, done=False, training=True):
+    def stop_episode(self, obs, reward, training=True):
         if training:
             # transpose state shape to WHC
             obs = self.phi(obs)
@@ -105,7 +105,7 @@ class Agent(AgentInterface):
                 action=self.last_action,
                 reward=reward,
                 obs_tp1=obs,
-                done=done
+                done=True
             )
         self.last_obs = None
         self.last_action = 0

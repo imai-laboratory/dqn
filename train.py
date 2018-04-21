@@ -8,7 +8,6 @@ import atari_constants
 import numpy as np
 import tensorflow as tf
 
-from lightsaber.tensorflow.util import initialize
 from lightsaber.tensorflow.log import TfBoardLogger, JsonLogger, dump_constants
 from lightsaber.rl.explorer import LinearDecayExplorer, ConstantExplorer
 from lightsaber.rl.replay_buffer import ReplayBuffer
@@ -98,7 +97,7 @@ def main():
         target_network_update_freq=constants.TARGET_UPDATE_INTERVAL
     )
 
-    initialize()
+    sess.run(tf.global_variables_initializer())
 
     saver = tf.train.Saver()
     if args.load is not None:
@@ -119,7 +118,6 @@ def main():
         if global_step > 0 and global_step % constants.MODEL_SAVE_INTERVAL == 0:
             path = os.path.join(outdir, 'model.ckpt')
             saver.save(sess, path, global_step=global_step)
-
 
     evaluator = Evaluator(
         env=copy.deepcopy(env),

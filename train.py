@@ -54,7 +54,9 @@ def main():
         state_shape = [84, 84, constants.STATE_WINDOW]
         def state_preprocess(state):
             state = cv2.cvtColor(state, cv2.COLOR_RGB2GRAY)
-            state = cv2.resize(state, (84, 84))
+            state = cv2.resize(state, (210, 160))
+            state = cv2.resize(state, (84, 110))
+            state = state[18:102, :]
             return np.array(state, dtype=np.float32) / 255.0
         # (window_size, H, W) -> (H, W, window_size)
         phi = lambda state: np.transpose(state, [1, 2, 0])

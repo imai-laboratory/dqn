@@ -1,12 +1,10 @@
-from lightsaber.rl.trainer import AgentInterface
 import network
 import build_graph
-import lightsaber.tensorflow.util as util
 import numpy as np
 import tensorflow as tf
 
 
-class Agent(AgentInterface):
+class Agent:
     def __init__(self,
                 q_func,
                 actions,

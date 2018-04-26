@@ -8,12 +8,11 @@ import atari_constants
 import numpy as np
 import tensorflow as tf
 
-from lightsaber.tensorflow.log import TfBoardLogger, JsonLogger, dump_constants
-from lightsaber.rl.explorer import LinearDecayExplorer, ConstantExplorer
-from lightsaber.rl.replay_buffer import ReplayBuffer
-from lightsaber.rl.trainer import Trainer
-from lightsaber.rl.evaluator import Evaluator, Recorder
-from lightsaber.rl.env_wrapper import EnvWrapper
+from rlsaber.log import TfBoardLogger, JsonLogger, dump_constants
+from rlsaber.explorer import LinearDecayExplorer, ConstantExplorer
+from rlsaber.replay_buffer import ReplayBuffer
+from rlsaber.trainer import Trainer, Evaluator, Recorder
+from rlsaber.env import EnvWrapper
 from actions import get_action_space
 from network import make_cnn
 from agent import Agent

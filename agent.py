@@ -12,6 +12,7 @@ class Agent:
                 replay_buffer,
                 exploration,
                 constants,
+                abam,
                 phi=lambda s: s,
                 batch_size=32,
                 train_freq=4,
@@ -23,6 +24,7 @@ class Agent:
         self.learning_starts = learning_starts
         self.target_network_update_freq = target_network_update_freq
         self.exploration = exploration
+        self.abam = abam
         self.replay_buffer = replay_buffer
         self.phi = phi
 
@@ -49,13 +51,24 @@ class Agent:
         )
 
         self.last_obs = None
+        self.last_action = 0
         self.t = 0
 
     def act(self, obs, reward, training):
         # transpose state shape to WHC
         obs = self.phi(obs)
         # take the best action
-        action = self._act([obs])[0]
+        q_values = self._q_values([obs])[0]
+        if self.abam is not None:
+            self.abam.accumulate(0, q_values)
+            evidence = self.abam.evidences[0]
+            if np.max(evidence) > self.abam.threshold:
+                action = np.argmax(evidence)
+                self.abam.flush()
+            else:
+                action = self.last_action
+        else:
+            action = np.argmax(q_values)
 
         # epsilon greedy exploration
         if training:
@@ -107,3 +120,5 @@ class Agent:
             )
         self.last_obs = None
         self.last_action = 0
+        if self.abam is not None:
+            self.abam.flush()

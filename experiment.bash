@@ -1,0 +1,21 @@
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --sigma 0.4 --log without_abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.4 --threshold 0.6 --sigma 0.4 --log with_abam_discount_04_threshold_06 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.4 --threshold 0.7 --sigma 0.4 --log with_abam_discount_04_threshold_07 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.4 --threshold 0.8 --sigma 0.4 --log with_abam_discount_04_threshold_08 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.4 --threshold 0.9 --sigma 0.4 --log with_abam_discount_04_threshold_09 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.4 --threshold 1.0 --sigma 0.4 --log with_abam_discount_04_threshold_10 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.5 --threshold 0.6 --sigma 0.4 --log with_abam_discount_05_threshold_06 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.5 --threshold 0.7 --sigma 0.4 --log with_abam_discount_05_threshold_07 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.5 --threshold 0.8 --sigma 0.4 --log with_abam_discount_05_threshold_08 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.5 --threshold 0.9 --sigma 0.4 --log with_abam_discount_05_threshold_09 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.5 --threshold 1.0 --sigma 0.4 --log with_abam_discount_05_threshold_10 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.6 --threshold 0.6 --sigma 0.4 --log with_abam_discount_06_threshold_06 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.6 --threshold 0.7 --sigma 0.4 --log with_abam_discount_06_threshold_07 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.6 --threshold 0.8 --sigma 0.4 --log with_abam_discount_06_threshold_08 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.6 --threshold 0.9 --sigma 0.4 --log with_abam_discount_06_threshold_09 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.6 --threshold 1.0 --sigma 0.4 --log with_abam_discount_06_threshold_10 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.7 --threshold 0.6 --sigma 0.4 --log with_abam_discount_07_threshold_06 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.7 --threshold 0.7 --sigma 0.4 --log with_abam_discount_07_threshold_07 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.7 --threshold 0.8 --sigma 0.4 --log with_abam_discount_07_threshold_08 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.7 --threshold 0.9 --sigma 0.4 --log with_abam_discount_07_threshold_09 --abam
+python train.py --env CartPole-v0 --load pretrained_cartpole/model.ckpt-30000 --demo --discount 0.7 --threshold 1.0 --sigma 0.4 --log with_abam_discount_07_threshold_10 --abam

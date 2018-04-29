@@ -17,24 +17,28 @@ from actions import get_action_space
 from network import make_cnn
 from agent import Agent
 from datetime import datetime
+from abam import Abam
 
 
 def main():
     date = datetime.now().strftime("%Y%m%d%H%M%S")
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='PongDeterministic-v4')
-    parser.add_argument('--outdir', type=str, default=date)
-    parser.add_argument('--logdir', type=str, default=date)
+    parser.add_argument('--log', type=str, default=date)
     parser.add_argument('--load', type=str, default=None)
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--demo', action='store_true')
     parser.add_argument('--record', action='store_true')
+    parser.add_argument('--sigma', type=float, default=0.4)
+    parser.add_argument('--discount', type=float, default=0.5)
+    parser.add_argument('--threshold', type=float, default=0.7)
+    parser.add_argument('--abam', action='store_true')
     args = parser.parse_args()
 
-    outdir = os.path.join(os.path.dirname(__file__), 'results/' + args.outdir)
+    outdir = os.path.join(os.path.dirname(__file__), 'results/' + args.log)
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    logdir = os.path.join(os.path.dirname(__file__), 'logs/' + args.logdir)
+    logdir = os.path.join(os.path.dirname(__file__), 'logs/' + args.log)
 
     env = gym.make(args.env)
 
@@ -45,7 +49,7 @@ def main():
         state_shape = [env.observation_space.shape[0], constants.STATE_WINDOW]
         state_preprocess = lambda state: state
         # (window_size, dim) -> (dim, window_size)
-        phi = lambda state: np.transpose(state, [1, 0])
+        phi = lambda state: np.transpose(state + np.random.normal(0, args.sigma, state_shape[:-1]), [1, 0])
     # atari environment
     else:
         constants = atari_constants
@@ -84,6 +88,7 @@ def main():
 
     model = make_cnn(convs=constants.CONVS, hiddens=constants.FCS)
 
+    abam = Abam(1, len(actions), args.threshold, args.discount) if args.abam else None
     agent = Agent(
         model,
         actions,
@@ -91,6 +96,7 @@ def main():
         replay_buffer,
         explorer,
         constants,
+        abam,
         phi=phi,
         learning_starts=constants.LEARNING_START_STEP,
         batch_size=constants.BATCH_SIZE,
@@ -109,11 +115,16 @@ def main():
     tflogger.register('reward', dtype=tf.float32)
     tflogger.register('eval_reward', dtype=tf.float32)
     jsonlogger = JsonLogger(os.path.join(outdir, 'reward.json'))
+    resultlogger = JsonLogger(os.path.join(outdir, 'result.json'))
+    rewards = []
 
     # callback on the end of episode
     def end_episode(reward, step, episode):
         tflogger.plot('reward', reward, step)
         jsonlogger.plot(reward=reward, step=step, episode=episode)
+        rewards.append(reward)
+        if episode == 100:
+            resultlogger.plot(reward=np.mean(rewards))
 
     def after_action(state, reward, global_step, local_step):
         if global_step > 0 and global_step % constants.MODEL_SAVE_INTERVAL == 0:

@@ -66,10 +66,10 @@ class Agent:
             evidence = self.abam.evidences[0]
             if np.max(evidence) > self.abam.threshold:
                 action = np.argmax(evidence)
-                self.abam.flush()
+                #self.abam.flush()
                 self.count += 1
             else:
-                action = self.last_action
+                action = 0
         else:
             action = np.argmax(q_values)
 

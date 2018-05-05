@@ -42,6 +42,8 @@ def main():
 
     env = gym.make(args.env)
 
+    #recorder = Recorder('.')
+
     # box environment
     if len(env.observation_space.shape) == 1:
         constants = box_constants
@@ -56,6 +58,8 @@ def main():
         actions = get_action_space(args.env)
         state_shape = [84, 84, constants.STATE_WINDOW]
         def state_preprocess(state):
+            #noise = np.array(255.0 * ((np.asarray(state, dtype=np.float32) / 255.0) + np.random.normal(0, args.sigma, (210, 160, 3))), dtype=np.uint8)
+            #recorder.append(noise)
             state = cv2.cvtColor(state, cv2.COLOR_RGB2GRAY)
             state = cv2.resize(state, (210, 160))
             state = cv2.resize(state, (84, 110))
@@ -129,13 +133,14 @@ def main():
         jsonlogger.plot(reward=reward, step=step, episode=episode, percentage=percentage)
         rewards.append(reward)
         percentages.append(percentage)
-        if episode == 100:
+        if episode == 30:
             resultlogger.plot(
                 reward=np.mean(rewards),
                 percentage=np.mean(percentages),
                 threshold=args.threshold,
                 discount=args.discount
             )
+        #recorder.save_mp4('pong_noise_without_abam.mp4')
 
     def after_action(state, reward, global_step, local_step):
         if global_step > 0 and global_step % constants.MODEL_SAVE_INTERVAL == 0:

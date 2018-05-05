@@ -53,6 +53,8 @@ class Agent:
         self.last_obs = None
         self.last_action = 0
         self.t = 0
+        self.count = 0
+        self.local_t = 0
 
     def act(self, obs, reward, training):
         # transpose state shape to WHC
@@ -65,10 +67,13 @@ class Agent:
             if np.max(evidence) > self.abam.threshold:
                 action = np.argmax(evidence)
                 self.abam.flush()
+                self.count += 1
             else:
                 action = self.last_action
         else:
             action = np.argmax(q_values)
+
+        self.local_t += 1
 
         # epsilon greedy exploration
         if training:
@@ -122,3 +127,5 @@ class Agent:
         self.last_action = 0
         if self.abam is not None:
             self.abam.flush()
+        self.local_t = 0
+        self.count = 0

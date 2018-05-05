@@ -29,9 +29,9 @@ def main():
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--demo', action='store_true')
     parser.add_argument('--record', action='store_true')
-    parser.add_argument('--sigma', type=float, default=0.4)
+    parser.add_argument('--sigma', type=float, default=0.1)
     parser.add_argument('--discount', type=float, default=0.5)
-    parser.add_argument('--threshold', type=float, default=0.7)
+    parser.add_argument('--threshold', type=float, default=0.4)
     parser.add_argument('--abam', action='store_true')
     args = parser.parse_args()
 
@@ -60,10 +60,13 @@ def main():
             state = cv2.resize(state, (210, 160))
             state = cv2.resize(state, (84, 110))
             state = state[18:102, :]
+            #cv2.imshow('preview', np.array(255.0 * ((np.asarray(state, dtype=np.float32) / 255.0) + np.random.normal(0, args.sigma, (84, 84))), dtype=np.uint8))
+            #if cv2.waitKey(10) < 0:
+            #    pass
             return np.array(state, dtype=np.float32) / 255.0
         # (window_size, H, W) -> (H, W, window_size)
-        phi = lambda state: np.transpose(state, [1, 2, 0])
-
+        phi = lambda state: np.transpose(state, [1, 2, 0]) + np.random.normal(0, args.sigma, state_shape)
+ 
     # save constant variables
     dump_constants(constants, os.path.join(outdir, 'constants.json'))
 
@@ -117,14 +120,22 @@ def main():
     jsonlogger = JsonLogger(os.path.join(outdir, 'reward.json'))
     resultlogger = JsonLogger(os.path.join(outdir, 'result.json'))
     rewards = []
+    percentages = []
 
     # callback on the end of episode
     def end_episode(reward, step, episode):
         tflogger.plot('reward', reward, step)
-        jsonlogger.plot(reward=reward, step=step, episode=episode)
+        percentage = float(agent.count) / agent.local_t
+        jsonlogger.plot(reward=reward, step=step, episode=episode, percentage=percentage)
         rewards.append(reward)
+        percentages.append(percentage)
         if episode == 100:
-            resultlogger.plot(reward=np.mean(rewards))
+            resultlogger.plot(
+                reward=np.mean(rewards),
+                percentage=np.mean(percentages),
+                threshold=args.threshold,
+                discount=args.discount
+            )
 
     def after_action(state, reward, global_step, local_step):
         if global_step > 0 and global_step % constants.MODEL_SAVE_INTERVAL == 0:

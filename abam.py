@@ -11,7 +11,6 @@ class Abam:
 
     def accumulate(self, index, q_values):
         probs = np.exp(q_values) / np.sum(np.exp(q_values + 1e-10))
-        print(probs)
         max_index = np.argmax(probs)
         self.evidences[index] *= self.discount_factor
         self.evidences[index][max_index] += probs[max_index]

@@ -35,6 +35,7 @@ def main():
     parser.add_argument('--abam', action='store_true')
     parser.add_argument('--noise', type=str, default='gaussian')
     parser.add_argument('--mask-size', type=int, default=8)
+    parser.add_argument('--check-image', action='store_true')
     args = parser.parse_args()
 
     outdir = os.path.join(os.path.dirname(__file__), 'results/' + args.log)
@@ -81,9 +82,10 @@ def main():
                 mask[x:x+size_x, y:y+size_y, :] = 0
                 state = state * mask
             #recorder.append(state)
-            cv2.imshow('preview', state)
-            if cv2.waitKey(10) < 0:
-                pass
+            if args.check_image:
+                cv2.imshow('preview', state)
+                if cv2.waitKey(10) < 0:
+                    pass
             state = cv2.cvtColor(state, cv2.COLOR_RGB2GRAY)
             state = cv2.resize(state, (210, 160))
             state = cv2.resize(state, (84, 110))

@@ -33,6 +33,8 @@ def main():
     parser.add_argument('--discount', type=float, default=0.5)
     parser.add_argument('--threshold', type=float, default=0.4)
     parser.add_argument('--abam', action='store_true')
+    parser.add_argument('--noise', type=str, default='gaussian')
+    parser.add_argument('--mask-size', type=int, default=8)
     args = parser.parse_args()
 
     outdir = os.path.join(os.path.dirname(__file__), 'results/' + args.log)
@@ -64,18 +66,32 @@ def main():
         actions = get_action_space(args.env)
         state_shape = [84, 84, constants.STATE_WINDOW]
         def state_preprocess(state):
-            #noise = np.array(255.0 * ((np.asarray(state, dtype=np.float32) / 255.0) + np.random.normal(0, args.sigma, (210, 160, 3))), dtype=np.uint8)
-            #recorder.append(noise)
+            if args.noise == 'gaussian':
+                noise = np.random.normal(0, args.sigma, (210, 160, 3)) * 255
+                state += np.array(noise, dtype=np.uint8)
+            elif args.noise == 'mask':
+                mask = np.ones((210, 160, 3), dtype=np.uint8)
+                scale_x = 210.0 / 84.0
+                scale_y = 160.0 / 84.0
+                size = args.mask_size
+                x = int(scale_x * np.random.randint(0, 84-size))
+                y = int(scale_y * np.random.randint(0, 84-size))
+                size_x = int(scale_x * size)
+                size_y = int(scale_y * size)
+                mask[x:x+size_x, y:y+size_y, :] = 0
+                state = state * mask
+            #recorder.append(state)
+            cv2.imshow('preview', state)
+            if cv2.waitKey(10) < 0:
+                pass
             state = cv2.cvtColor(state, cv2.COLOR_RGB2GRAY)
             state = cv2.resize(state, (210, 160))
             state = cv2.resize(state, (84, 110))
             state = state[18:102, :]
-            #cv2.imshow('preview', np.array(255.0 * ((np.asarray(state, dtype=np.float32) / 255.0) + np.random.normal(0, args.sigma, (84, 84))), dtype=np.uint8))
-            #if cv2.waitKey(10) < 0:
-            #    pass
             return np.array(state, dtype=np.float32) / 255.0
         # (window_size, H, W) -> (H, W, window_size)
-        phi = lambda state: np.transpose(state, [1, 2, 0]) + np.random.normal(0, args.sigma, state_shape)
+        def phi(state):
+            return np.transpose(state, [1, 2, 0])
  
     # save constant variables
     dump_constants(constants, os.path.join(outdir, 'constants.json'))
@@ -147,7 +163,7 @@ def main():
                 threshold=args.threshold,
                 discount=args.discount
             )
-        #recorder.save_mp4('pong_noise_without_abam.mp4')
+        #recorder.save_mp4('pong_mask_without_abam.mp4')
 
     def after_action(state, reward, global_step, local_step):
         if global_step > 0 and global_step % constants.MODEL_SAVE_INTERVAL == 0:

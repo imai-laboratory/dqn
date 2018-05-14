@@ -133,7 +133,7 @@ def main():
         jsonlogger.plot(reward=reward, step=step, episode=episode, percentage=percentage)
         rewards.append(reward)
         percentages.append(percentage)
-        if episode == 30:
+        if episode == 100:
             resultlogger.plot(
                 reward=np.mean(rewards),
                 percentage=np.mean(percentages),

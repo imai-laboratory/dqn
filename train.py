@@ -51,7 +51,13 @@ def main():
         state_shape = [env.observation_space.shape[0], constants.STATE_WINDOW]
         state_preprocess = lambda state: state
         # (window_size, dim) -> (dim, window_size)
-        phi = lambda state: np.transpose(state + np.random.normal(0, args.sigma, state_shape[:-1]), [1, 0])
+        def phi(state):
+            noise = np.random.normal(0, args.sigma, state_shape[:-1])
+            noise[0] *= 2.4
+            noise[1] *= 2.0
+            noise[2] *= 0.4
+            noise[3] *= 3.5
+            return np.transpose(state + noise, [1, 0])
     # atari environment
     else:
         constants = atari_constants
@@ -133,6 +139,7 @@ def main():
         jsonlogger.plot(reward=reward, step=step, episode=episode, percentage=percentage)
         rewards.append(reward)
         percentages.append(percentage)
+        print(percentage)
         if episode == 30:
             resultlogger.plot(
                 reward=np.mean(rewards),

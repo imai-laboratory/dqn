@@ -15,13 +15,15 @@ class Abam:
         self.evidences[index] *= self.discount_factor
         self.evidences[index][max_index] += probs[max_index]
 
-    def select_action(self):
+    def select_action(self, td):
         selected_module = 0
         selected_action = np.argmax(self.evidences[0])
         for i, evidence in enumerate(self.evidences[1:]):
             index = i + 1
             max_index = np.argmax(evidence)
-            if self.threshold <= evidence[max_index]:
+            error = td[max_index]
+            print(error)
+            if self.threshold + error <= evidence[max_index]:
                 selected_module = index
                 selected_action = max_index
         return selected_module, selected_action

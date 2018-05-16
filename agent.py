@@ -27,6 +27,7 @@ class Agent:
         self.abam = abam
         self.replay_buffer = replay_buffer
         self.phi = phi
+        self.gamma = constants.GAMMA
 
         if constants.OPTIMIZER == 'adam':
             optimizer = tf.train.AdamOptimizer(constants.LR)
@@ -55,16 +56,19 @@ class Agent:
         self.t = 0
         self.count = 0
         self.local_t = 0
+        self.last_value = 0
 
     def act(self, obs, reward, training):
         # transpose state shape to WHC
         obs = self.phi(obs)
         # take the best action
         q_values = self._q_values([obs])[0]
+        td = (reward + self.gamma * q_values - self.last_value) ** 2
         if self.abam is not None:
             self.abam.accumulate(0, q_values)
             evidence = self.abam.evidences[0]
-            if np.max(evidence) > self.abam.threshold:
+            error = td[np.argmax(evidence)]
+            if np.max(evidence) > 0.05 * error + self.abam.threshold:
                 action = np.argmax(evidence)
                 #self.abam.flush()
                 self.count += 1
@@ -74,6 +78,7 @@ class Agent:
             action = np.argmax(q_values)
 
         self.local_t += 1
+        value = q_values[action]
 
         # epsilon greedy exploration
         if training:
@@ -110,6 +115,7 @@ class Agent:
         self.t += 1
         self.last_obs = obs
         self.last_action = action
+        self.last_value = value
         return self.actions[action]
 
     def stop_episode(self, obs, reward, training=True):
@@ -129,3 +135,4 @@ class Agent:
             self.abam.flush()
         self.local_t = 0
         self.count = 0
+        self.last_value = 0

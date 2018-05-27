@@ -68,8 +68,9 @@ def main():
         state_shape = [84, 84, constants.STATE_WINDOW]
         def state_preprocess(state):
             if args.noise == 'gaussian':
+                state_img = copy.deepcopy(state)
                 noise = np.random.normal(0, args.sigma, (210, 160, 3)) * 255
-                state += np.array(noise, dtype=np.uint8)
+                state_img += np.array(noise, dtype=np.uint8)
             elif args.noise == 'mask':
                 mask = np.ones((210, 160, 3), dtype=np.uint8)
                 scale_x = 210.0 / 84.0
@@ -80,17 +81,28 @@ def main():
                 size_x = int(scale_x * size)
                 size_y = int(scale_y * size)
                 mask[x:x+size_x, y:y+size_y, :] = 0
-                state = state * mask
-            #recorder.append(state)
+                state_img = state * mask
+            #recorder.append(state_img)
             if args.check_image:
-                cv2.imshow('preview', state)
+                cv2.imshow('preview', state_img)
                 if cv2.waitKey(10) < 0:
                     pass
             state = cv2.cvtColor(state, cv2.COLOR_RGB2GRAY)
             state = cv2.resize(state, (210, 160))
             state = cv2.resize(state, (84, 110))
             state = state[18:102, :]
-            return np.array(state, dtype=np.float32) / 255.0
+            state = np.array(state, dtype=np.float32) / 255.0
+            if args.noise == 'gaussian':
+                noise = np.random.normal(0, args.sigma, (84, 84))
+                state += noise
+            elif args.noise == 'mask':
+                mask = np.ones((84, 84), dtype=np.float32)
+                size = args.mask_size
+                x = np.random.randint(0, 84-size)
+                y = np.random.randint(0, 84-size)
+                mask[x:x+size, y:y+size] = 0
+                state = state * mask
+            return state
         # (window_size, H, W) -> (H, W, window_size)
         def phi(state):
             return np.transpose(state, [1, 2, 0])
@@ -109,6 +121,10 @@ def main():
     env = EnvWrapper(
         env,
         s_preprocess=state_preprocess,
+        r_preprocess=lambda r: np.clip(r, -1, 1)
+    )
+    env = EnvWrapper(
+        env,
         r_preprocess=lambda r: np.clip(r, -1, 1)
     )
 
@@ -192,7 +208,7 @@ def main():
         after_action=after_action,
         end_episode=end_episode,
         training=not args.demo,
-        evaluator=evaluator,
+        evaluator=None,#evaluator,
         should_eval=should_eval,
         end_eval=end_eval
     )

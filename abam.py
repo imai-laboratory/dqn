@@ -21,9 +21,7 @@ class Abam:
         for i, evidence in enumerate(self.evidences[1:]):
             index = i + 1
             max_index = np.argmax(evidence)
-            error = td[max_index]
-            print(error)
-            if self.threshold + error <= evidence[max_index]:
+            if self.threshold <= evidence[max_index]:
                 selected_module = index
                 selected_action = max_index
         return selected_module, selected_action

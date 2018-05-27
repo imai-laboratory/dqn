@@ -68,7 +68,7 @@ class Agent:
             self.abam.accumulate(0, q_values)
             evidence = self.abam.evidences[0]
             error = td[np.argmax(evidence)]
-            if np.max(evidence) > 0.05 * error + self.abam.threshold:
+            if np.max(evidence) > self.abam.threshold:
                 action = np.argmax(evidence)
                 #self.abam.flush()
                 self.count += 1
@@ -81,9 +81,8 @@ class Agent:
         value = q_values[action]
 
         # epsilon greedy exploration
-        if training:
-            action = self.exploration.select_action(
-                self.t, action, len(self.actions))
+        action = self.exploration.select_action(
+            self.t, action, len(self.actions))
 
         if training:
             if self.t % self.target_network_update_freq == 0:

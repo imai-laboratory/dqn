@@ -11,7 +11,9 @@ class Agent:
                 state_shape,
                 replay_buffer,
                 exploration,
-                constants,
+                optimizer,
+                gamma,
+                grad_norm_clipping,
                 phi=lambda s: s,
                 batch_size=32,
                 train_freq=4,
@@ -26,15 +28,6 @@ class Agent:
         self.replay_buffer = replay_buffer
         self.phi = phi
 
-        if constants.OPTIMIZER == 'adam':
-            optimizer = tf.train.AdamOptimizer(constants.LR)
-        else:
-            optimizer = tf.train.RMSPropOptimizer(
-                learning_rate=constants.LR,
-                momentum=constants.MOMENTUM,
-                epsilon=constants.EPSILON
-            )
-
         self._act,\
         self._train,\
         self._update_target,\
@@ -43,9 +36,8 @@ class Agent:
             num_actions=len(actions),
             state_shape=state_shape,
             optimizer=optimizer,
-            constants=constants,
-            gamma=constants.GAMMA,
-            grad_norm_clipping=constants.GRAD_CLIPPING
+            gamma=gamma,
+            grad_norm_clipping=grad_norm_clipping
         )
 
         self.last_obs = None
@@ -72,13 +64,7 @@ class Agent:
                 rewards,\
                 obs_tp1,\
                 dones = self.replay_buffer.sample(self.batch_size)
-                td_errors = self._train(
-                    obs_t,
-                    actions,
-                    rewards,
-                    obs_tp1,
-                    dones
-                )
+                td_errors = self._train(obs_t, actions, rewards, obs_tp1, dones)
 
             if self.last_obs is not None:
                 self.replay_buffer.append(

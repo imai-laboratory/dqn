@@ -70,6 +70,14 @@ def main():
     else:
         explorer = ConstantExplorer(constants.EXPLORATION_EPSILON)
 
+    # optimizer
+    if constants.OPTIMIZER == 'adam':
+        optimizer = tf.train.AdamOptimizer(constants.LR)
+    else:
+        optimizer = tf.train.RMSPropOptimizer(
+            learning_rate=constants.LR, momentum=constants.MOMENTUM,
+            epsilon=constants.EPSILON)
+
     # wrap gym environment
     env = EnvWrapper(
         env,
@@ -90,7 +98,9 @@ def main():
         state_shape,
         replay_buffer,
         explorer,
-        constants,
+        optimizer,
+        gamma=constants.GAMMA,
+        grad_norm_clipping=constants.GRAD_CLIPPING,
         phi=phi,
         learning_starts=constants.LEARNING_START_STEP,
         batch_size=constants.BATCH_SIZE,

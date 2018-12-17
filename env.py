@@ -48,7 +48,7 @@ class Env:
         self.raw_reward += reward
         reward = self.reward_preprocess(reward)
         self.local_steps[self.current_index] += 1
-        return np.array(list(self.queue)), reward, done, info
+        return obs, reward, done, info
 
     def reset(self):
         self.raw_reward = 0
@@ -59,7 +59,7 @@ class Env:
         for i in range(self.num_stack - 1):
             self.queue.append(empty_obs)
         self.queue.append(obs)
-        return np.array(list(self.queue))
+        return obs
 
     def get_detail(self):
         return dict(reward=self.raw_reward)

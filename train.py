@@ -17,7 +17,7 @@ from actions import get_action_space
 from network import make_cnn
 from agent import Agent
 from datetime import datetime
-
+from env import Env
 
 def main():
     date = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -36,7 +36,7 @@ def main():
         os.makedirs(outdir)
     logdir = os.path.join(os.path.dirname(__file__), 'logs/' + args.logdir)
 
-    env = gym.make(args.env)
+    env = Env()
 
     # box environment
     if len(env.observation_space.shape) == 1:

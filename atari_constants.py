@@ -23,3 +23,15 @@ MODEL_SAVE_INTERVAL = 10 ** 6
 EVAL_INTERVAL = 10 ** 5
 EVAL_EPISODES = 10
 RECORD_EPISODES = 3
+
+ENV_LIST = [
+    'Black',
+    #'White',
+    #'Scale'
+]
+
+PONG_ENV_LIST = [
+    'Black',
+    #'White',
+    #'Scale'
+]

@@ -16,6 +16,7 @@ def make_env(env_name):
 class Env:
     def __init__(self, num_stack=4):
         envs = [make_env(ENV_LIST[i]) for i in range(len(ENV_LIST))]
+        self.observation_space = envs[0].observation_space
         self.envs = envs
         num_actions = max(envs, key=lambda e: e.action_space.n).action_space.n
         self.action_space = Discrete(num_actions)

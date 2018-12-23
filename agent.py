@@ -64,14 +64,16 @@ class Agent:
                 rewards,\
                 obs_tp1,\
                 dones = self.replay_buffer.sample(self.batch_size)
+                obs_t = np.array(obs_t, dtype=np.float32) / 255.0
+                obs_tp1 = np.array(obs_tp1, dtype=np.float32) / 255.0
                 td_errors = self._train(obs_t, actions, rewards, obs_tp1, dones)
 
             if self.last_obs is not None:
                 self.replay_buffer.append(
-                    obs_t=self.last_obs,
+                    obs_t=np.array(self.last_obs * 255.0, dtype=np.uint8),
                     action=self.last_action,
                     reward=reward,
-                    obs_tp1=obs,
+                    obs_tp1=np.array(obs * 255.0, dtype=np.uint8),
                     done=False
                 )
 
@@ -85,10 +87,10 @@ class Agent:
             # transpose state shape to WHC
             obs = self.phi(obs)
             self.replay_buffer.append(
-                obs_t=self.last_obs,
+                obs_t=np.array(self.last_obs * 255.0, dtype=np.uint8),
                 action=self.last_action,
                 reward=reward,
-                obs_tp1=obs,
+                obs_tp1=np.array(obs * 255.0, dtype=np.uint8),
                 done=True
             )
         self.last_obs = None

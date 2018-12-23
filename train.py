@@ -114,12 +114,17 @@ def main():
     tflogger = TfBoardLogger(train_writer)
     tflogger.register('reward', dtype=tf.float32)
     tflogger.register('eval_reward', dtype=tf.float32)
-    jsonlogger = JsonLogger(os.path.join(outdir, 'reward.json'))
+    jsonloggers = {}
+    for env_name in constants.ENV_LIST:
+        jsonloggers[env_name] = JsonLogger(
+            os.path.join(outdir, env_name + '_reward.json'))
 
     # callback on the end of episode
     def end_episode(reward, step, episode):
         tflogger.plot('reward', reward, step)
-        jsonlogger.plot(reward=reward, step=step, episode=episode)
+        env_name = env.env.current_env_name()
+        step = env.env.get_local_step(env_name)
+        jsonloggers[env_name].plot(reward=reward, step=step)
 
     def after_action(state, reward, global_step, local_step):
         if global_step > 0 and global_step % constants.MODEL_SAVE_INTERVAL == 0:

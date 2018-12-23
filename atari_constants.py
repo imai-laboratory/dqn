@@ -1,4 +1,4 @@
-REPLAY_BUFFER_SIZE = 10 ** 5
+REPLAY_BUFFER_SIZE = 3 * 10 ** 5
 BATCH_SIZE = 32
 LEARNING_START_STEP = 10 ** 4
 FINAL_STEP = 10 ** 7
@@ -26,12 +26,12 @@ RECORD_EPISODES = 3
 
 ENV_LIST = [
     'Black',
-    #'White',
-    #'Scale'
+    'White',
+    'Scale'
 ]
 
 PONG_ENV_LIST = [
     'Black',
-    #'White',
-    #'Scale'
+    'White',
+    'Scale'
 ]
